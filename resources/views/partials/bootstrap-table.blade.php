@@ -31,9 +31,17 @@
         }
 
         $('.snipe-table').bootstrapTable('destroy').each(function () {
-            export_options = JSON.parse($(this).attr('data-export-options'));
-            export_options['htmlContent'] = true; //always enforce this on the given data-export-options (to prevent XSS)
-            
+            data_export_options = $(this).attr('data-export-options');
+            export_options = data_export_options ? JSON.parse(data_export_options) : {};
+            export_options['htmlContent'] = false; // this is already the default; but let's be explicit about it
+            // the following callback method is necessary to prevent XSS vulnerabilities
+            // (this is taken from Bootstrap Tables's default wrapper around jQuery Table Export)
+            export_options['onCellHtmlData'] = function (cell, rowIndex, colIndex, htmlData) {
+                if (cell.is('th')) {
+                    return cell.find('.th-inner').text()
+                }
+                return htmlData
+            }
             $(this).bootstrapTable({
                 classes: 'table table-responsive table-no-bordered',
                 ajaxOptions: {
